@@ -204,29 +204,35 @@ def opcodeHex(opcode_name):
 def registerHex(register_name):
     return format(REGISTER_MAP[register_name], "x")
 
-def secureNegative(value):
+def formatNumber(value):
     if value < 0:
-        return int("0xFFFF", 0) + value + 1
-    else:
-        return value
+        value = int("0xFFFF", 0) + value + 1
+    return "{0:08x}".format(value)
 
 def immediateHex(immediate, symbol_table):
     try:
-        return "{0:04x}".format(secureNegative(int(immediate, 0)))[:4]
+        return formatNumber(int(immediate, 0))[-4:]
     except ValueError:
-        return "{0:04x}".format(secureNegative(symbol_table[immediate]))[:4]
+        return formatNumber(symbol_table[immediate])[-4:]
+
+def immediateTopHex(immediate, symbol_table):
+    try:
+        return formatNumber(int(immediate, 0))[:4]
+    except ValueError:
+        return formatNumber(symbol_table[immediate])[:4]
+
 
 def shImmediateHex(immediate, symbol_table):
     try:
-        return "{0:04x}".format(secureNegative(int(immediate, 0)))[:4]
+        return formatNumber(int(immediate, 0))[-4:]
     except ValueError:
-        return "{0:04x}".format(secureNegative(symbol_table[immediate] >> 2))[:4]
+        return formatNumber(symbol_table[immediate] >> 2)[-4:]
 
 def pcRelHex(pcRel, symbol_table, address):
     try:
-        return "{0:04x}".format(secureNegative(int(pcRel, 0)))[:4]
+        return formatNumber(int(pcRel, 0))[-4:]
     except ValueError:
-        return "{0:04x}".format(secureNegative(((symbol_table[pcRel] - address) >> 2) - 1))[:4]
+        return formatNumber(((symbol_table[pcRel] - address) >> 2) - 1)[-4:]
 
 
 def instructionHex(instruction, symbol_table, address):
@@ -237,7 +243,7 @@ def instructionHex(instruction, symbol_table, address):
     elif opcode in OPCODES_R_R_NUM:
         return opcode_hex + registerHex(instruction[1]) + registerHex(instruction[2]) + immediateHex(instruction[3], symbol_table)
     elif opcode in OPCODES_R_NUM:
-        return opcode_hex + registerHex(instruction[1]) + "0" + immediateHex(instruction[2], symbol_table)
+        return opcode_hex + registerHex(instruction[1]) + "0" + immediateTopHex(instruction[2], symbol_table)
     elif opcode in OPCODES_R_NUM_R:
         immediate, register = instruction[2].split("(")
         register = register[:-1]
