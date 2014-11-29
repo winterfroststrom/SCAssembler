@@ -28,6 +28,10 @@ REGISTER_MAP = {
     "R13" : 13,
     "R14" : 14,
     "R15" : 15,
+    "PCS" : 0,
+    "IHA" : 1,
+    "IRA" : 2,
+    "IDN" : 3,
     "A0" : 0,
     "A1": 1,
     "A2": 2,
@@ -38,6 +42,7 @@ REGISTER_MAP = {
     "S0": 6,
     "S1": 7,
     "S2": 8,
+    "SSP": 10,
     "GP": 12,
     "FP": 13,
     "SP": 14,
@@ -123,14 +128,26 @@ OPCODES_R_WNUM_R = {
     "JAL":      0b10110000,
 }
 
-OPCODES_MAP = dict(OPCODES_R_R_R.items() +
+OPCODES_R_R = {
+    "RSR":      0b11110010,
+    "WSR":      0b11110011,
+}
+
+OPCODES_NONE = {
+    "RETI":      0b11110001,
+}
+
+OPCODES_MAP = dict(
+    OPCODES_R_R_R.items() +
     OPCODES_R_R_NUM.items() +
     OPCODES_R_NUM.items() +
     OPCODES_R_NUM_R.items() +
     OPCODES_R_RNUM_R.items() +
     OPCODES_R_WNUM.items() +
     OPCODES_R_WNUM_R.items() +
-    OPCODES_R_R_WNUM.items()
+    OPCODES_R_R_WNUM.items() +
+    OPCODES_R_R.items() +
+    OPCODES_NONE.items()
 )
 
 def normalizeContents(contents):
@@ -260,6 +277,12 @@ def instructionHex(instruction, symbol_table, address):
         immediate, register = instruction[2].split("(")
         register = register[:-1]
         return opcode_hex + registerHex(instruction[1]) + registerHex(register) + shImmediateHex(immediate, symbol_table)
+    elif opcode in OPCODES_R_R_WNUM:
+        return opcode_hex + registerHex(instruction[1]) + registerHex(instruction[2]) + pcRelHex(instruction[3], symbol_table, address)
+    elif opcode in OPCODES_R_R:
+        return opcode_hex + registerHex(instruction[1]) + registerHex(instruction[2]) + "0000"
+    elif opcode in OPCODES_NONE:
+        return opcode_hex + "000000"
     else:
         return "04000000"
 
